@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/scchi/cards/internal/data"
 )
 
 func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -14,11 +16,28 @@ func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request
 func (app *application) showDeckHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	id, err := app.readIDParam(ps)
 	if err != nil {
-		http.NotFound(w, r)
+		app.notFoundResponse(w, r)
 		return
 	}
 
-	fmt.Fprintf(w, "show the details of deck %d\n", id)
+	deck := data.Deck{
+		ID:        id,
+		Shuffled:  true,
+		Remaining: 50,
+		Cards: []data.Card{
+			data.Card{
+				Value: "ACE",
+				Suit:  "DIAMOND",
+				Code:  "AD",
+			},
+		},
+		CreatedAt: time.Now(),
+	}
+
+	err = app.writeJSON(w, http.StatusOK, deck, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }
 
 func (app *application) drawCardsHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
