@@ -12,6 +12,7 @@ func (app *application) routes() *httprouter.Router {
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/decks", app.createDeckHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/decks/:id", app.showDeckHandler)
+	router.HandlerFunc(http.MethodPatch, "/v1/decks/:id/:count", app.drawCardsHandler)
 
 	return router
 }
