@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/scchi/cards/internal/data"
@@ -48,14 +47,6 @@ func (app *application) showDeckHandler(w http.ResponseWriter, r *http.Request, 
 		ID:        id,
 		Shuffled:  true,
 		Remaining: 50,
-		// Cards: []data.Card{
-		// 	data.Card{
-		// 		Value: "ACE",
-		// 		Suit:  "DIAMOND",
-		// 		Code:  "AD",
-		// 	},
-		// },
-		CreatedAt: time.Now(),
 	}
 
 	err = app.writeJSON(w, http.StatusOK, deck, nil)
