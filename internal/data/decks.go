@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/lib/pq"
 	"github.com/scchi/cards/internal/validator"
 )
 
@@ -31,7 +32,13 @@ type DeckModel struct {
 }
 
 func (d DeckModel) Insert(deck *Deck) error {
-	return nil
+	query := `
+		INSERT INTO decks (shuffled, remaining, cards)
+		VALUES ($1, $2, $3)
+		RETURNING id, created_at`
+
+	args := []any{deck.Shuffled, deck.Remaining, pq.Array(deck.Cards)}
+	return d.DB.QueryRow(query, args...).Scan(&deck.ID, &deck.CreatedAt)
 }
 
 func (d DeckModel) Get(id int64) (*Deck, error) {

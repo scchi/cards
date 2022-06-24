@@ -22,8 +22,9 @@ func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	deck := &data.Deck{
-		Shuffled: input.Shuffled,
-		Cards:    input.Cards,
+		Shuffled:  input.Shuffled,
+		Remaining: 5, // TODO
+		Cards:     input.Cards,
 	}
 
 	v := validator.New()
@@ -33,7 +34,21 @@ func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	fmt.Fprintf(w, "%+v\n", input)
+	// Add Remaining field here
+
+	err = app.models.Decks.Insert(deck)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	headers := make(http.Header)
+	headers.Set("Location", fmt.Sprintf("/v1/movies/%d", deck.ID))
+
+	err = app.writeJSON(w, http.StatusCreated, deck, headers)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }
 
 func (app *application) showDeckHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -48,6 +63,8 @@ func (app *application) showDeckHandler(w http.ResponseWriter, r *http.Request, 
 		Shuffled:  true,
 		Remaining: 50,
 	}
+
+	// TODO: Custom JSON Encoder for Cards
 
 	err = app.writeJSON(w, http.StatusOK, deck, nil)
 	if err != nil {
