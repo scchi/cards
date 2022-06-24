@@ -10,7 +10,18 @@ import (
 )
 
 func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	fmt.Fprintln(w, "create a new deck")
+	var input struct {
+		Shuffled bool     `json:"shuffled"`
+		Cards    []string `json:"cards"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	fmt.Fprintf(w, "%+v\n", input)
 }
 
 func (app *application) showDeckHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
