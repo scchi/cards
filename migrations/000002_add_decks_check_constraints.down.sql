@@ -1,0 +1,1 @@
+ALTER TABLE decks DROP CONSTRAINT IF EXISTS cards_length_check;

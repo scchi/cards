@@ -7,17 +7,30 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/scchi/cards/internal/data"
+	"github.com/scchi/cards/internal/validator"
 )
 
 func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var input struct {
-		Shuffled bool     `json:"shuffled"`
-		Cards    []string `json:"cards"`
+		Shuffled bool        `json:"shuffled,omitempty"`
+		Cards    []data.Card `json:"cards"`
 	}
 
 	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	deck := &data.Deck{
+		Shuffled: input.Shuffled,
+		Cards:    input.Cards,
+	}
+
+	v := validator.New()
+
+	if data.ValidateDeck(v, deck); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
@@ -35,13 +48,13 @@ func (app *application) showDeckHandler(w http.ResponseWriter, r *http.Request, 
 		ID:        id,
 		Shuffled:  true,
 		Remaining: 50,
-		Cards: []data.Card{
-			data.Card{
-				Value: "ACE",
-				Suit:  "DIAMOND",
-				Code:  "AD",
-			},
-		},
+		// Cards: []data.Card{
+		// 	data.Card{
+		// 		Value: "ACE",
+		// 		Suit:  "DIAMOND",
+		// 		Code:  "AD",
+		// 	},
+		// },
 		CreatedAt: time.Now(),
 	}
 

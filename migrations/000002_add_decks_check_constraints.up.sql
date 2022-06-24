@@ -1,0 +1,1 @@
+ALTER TABLE decks ADD CONSTRAINT cards_length_check CHECK (array_length(cards, 1) BETWEEN 0 AND 52);
