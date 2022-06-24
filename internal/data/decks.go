@@ -41,3 +41,25 @@ func (d DeckModel) Get(id int64) (*Deck, error) {
 func (d DeckModel) Update(deck *Deck) error {
 	return nil
 }
+
+func (d DeckModel) Draw(deck *Deck) error {
+	return nil
+}
+
+type MockDeckModel struct{}
+
+func (m MockDeckModel) Insert(deck *Deck) error {
+	return nil
+}
+
+func (m MockDeckModel) Get(id int64) (*Deck, error) {
+	return nil, nil
+}
+
+func (m MockDeckModel) Update(deck *Deck) error {
+	return nil
+}
+
+func (m MockDeckModel) Draw(deck *Deck) error {
+	return nil
+}
