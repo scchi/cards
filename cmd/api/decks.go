@@ -11,8 +11,8 @@ import (
 
 func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var input struct {
-		Shuffled bool        `json:"shuffled,omitempty"`
-		Cards    []data.Card `json:"cards"`
+		Shuffled bool     `json:"shuffled,omitempty"`
+		Cards    []string `json:"cards"`
 	}
 
 	err := app.readJSON(w, r, &input)
