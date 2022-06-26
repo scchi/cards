@@ -26,7 +26,7 @@ func (v *Validator) Check(ok bool, key, message string) {
 	}
 }
 
-func PermittedValue[T comparable](value T, permittedValues ...T) bool {
+func PermittedValue[T comparable](value T, permittedValues []T) bool {
 	for i := range permittedValues {
 		if value == permittedValues[i] {
 			return true
@@ -34,6 +34,16 @@ func PermittedValue[T comparable](value T, permittedValues ...T) bool {
 	}
 
 	return false
+}
+
+func PermittedValues[T comparable](values []T, permittedValues []T) bool {
+	for _, value := range values {
+		if !PermittedValue(value, permittedValues) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func Matches(value string, rx *regexp.Regexp) bool {

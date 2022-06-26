@@ -7,11 +7,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/scchi/cards/internal/data"
 )
 
 func newTestApplication(t *testing.T) *application {
 	return &application{
 		logger: log.New(io.Discard, "", 0),
+		models: data.NewMockModels(),
 	}
 }
 
