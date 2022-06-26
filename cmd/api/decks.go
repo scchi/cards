@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/scchi/cards/internal/data"
@@ -22,29 +24,43 @@ func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	deck := &data.Deck{
-		Shuffled:  input.Shuffled,
-		Remaining: 5, // TODO
-		Cards:     input.Cards,
+		Shuffled: input.Shuffled,
+		Cards:    input.Cards,
 	}
 
-	v := validator.New()
+	if deck.Cards != nil {
+		v := validator.New()
 
-	if data.ValidateDeck(v, deck); !v.Valid() {
-		app.failedValidationResponse(w, r, v.Errors)
-		return
+		if data.ValidateDeck(v, deck); !v.Valid() {
+			app.failedValidationResponse(w, r, v.Errors)
+			return
+		}
 	}
 
-	// Add Remaining field here
-
-	err = app.models.Decks.Insert(deck)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
+	if len(deck.Cards) == 0 || deck.Cards == nil {
+		deck.Cards = data.GenerateCards()
 	}
+
+	if deck.Shuffled {
+		rand.Seed(time.Now().Unix())
+
+		rand.Shuffle(len(deck.Cards), func(i, j int) {
+			deck.Cards[i], deck.Cards[j] = deck.Cards[j], deck.Cards[i]
+		})
+	}
+
+	deck.Remaining = len(deck.Cards)
+
+	// err = app.models.Decks.Insert(deck)
+	// if err != nil {
+	// 	app.serverErrorResponse(w, r, err)
+	// 	return
+	// }
 
 	headers := make(http.Header)
-	headers.Set("Location", fmt.Sprintf("/v1/movies/%d", deck.ID))
+	headers.Set("Location", fmt.Sprintf("/v1/decks/%d", deck.ID))
 
+	// fmt.Printf("%+v\n", deck)
 	err = app.writeJSON(w, http.StatusCreated, deck, headers)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
