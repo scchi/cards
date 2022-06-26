@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -13,8 +14,8 @@ import (
 
 func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var input struct {
-		Shuffled bool     `json:"shuffled,omitempty"`
-		Cards    []string `json:"cards"`
+		Shuffled bool        `json:"shuffled,omitempty"`
+		Cards    []data.Card `json:"cards"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -51,15 +52,16 @@ func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request
 
 	deck.Remaining = len(deck.Cards)
 
-	// err = app.models.Decks.Insert(deck)
-	// if err != nil {
-	// 	app.serverErrorResponse(w, r, err)
-	// 	return
-	// }
+	err = app.models.Decks.Insert(deck)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
 
 	headers := make(http.Header)
-	headers.Set("Location", fmt.Sprintf("/v1/decks/%d", deck.ID))
+	headers.Set("Location", fmt.Sprintf("/v1/decks/%s", deck.ID))
 
+	deck.Cards = []data.Card{}
 	// fmt.Printf("%+v\n", deck)
 	err = app.writeJSON(w, http.StatusCreated, deck, headers)
 	if err != nil {
@@ -74,13 +76,19 @@ func (app *application) showDeckHandler(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	deck := data.Deck{
-		ID:        id,
-		Shuffled:  true,
-		Remaining: 50,
+	deck, err := app.models.Decks.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
 	}
 
-	// TODO: Custom JSON Encoder for Cards
+	deck.Cards = generateJSONCards(deck.StringCards)
+	deck.Remaining = len(deck.Cards)
 
 	err = app.writeJSON(w, http.StatusOK, deck, nil)
 	if err != nil {
@@ -89,17 +97,28 @@ func (app *application) showDeckHandler(w http.ResponseWriter, r *http.Request, 
 }
 
 func (app *application) drawCardsHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	id, err := app.readIDParam(ps)
-	if err != nil {
-		http.NotFound(w, r)
-		return
+
+	// id, err := app.readIDParam(ps)
+	// if err != nil {
+	// 	http.NotFound(w, r)
+	// 	return
+	// }
+
+	// count, err := app.readCountParam(ps)
+	// if err != nil {
+	// 	http.NotFound(w, r)
+	// 	return
+	// }
+
+	// fmt.Fprintf(w, "draw %d cards from deck %d\n", count, id)
+}
+
+func generateJSONCards(stringCards []string) []data.Card {
+	var result []data.Card
+
+	for _, card := range stringCards {
+		result = append(result, data.Card(card))
 	}
 
-	count, err := app.readCountParam(ps)
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
-
-	fmt.Fprintf(w, "draw %d cards from deck %d\n", count, id)
+	return result
 }

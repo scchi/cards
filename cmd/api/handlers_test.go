@@ -3,46 +3,20 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/scchi/cards/internal/assert"
+	"github.com/scchi/cards/internal/data"
 )
-
-var testApp = &application{}
 
 var jsonResponse struct {
 	Id        int  `json:"deck_id"`
 	Shuffled  bool `json:"shuffled"`
 	Remaining int  `json:"remaining"`
 }
-
-// func TestGetDeck(t *testing.T) {
-// 	t.Run("returns 200 status code", func(t *testing.T) {
-// 		handler := testApp.showDeckHandler
-// 		router := httprouter.New()
-// 		router.GET("/v1/decks/:id", handler)
-
-// 		request, _ := http.NewRequest(http.MethodGet, "/v1/decks/5", nil)
-// 		response := httptest.NewRecorder()
-
-// 		router.ServeHTTP(response, request)
-
-// 		json.NewDecoder(response.Body).Decode(&jsonResponse)
-
-// 		gotId := jsonResponse.Id
-// 		wantId := 5
-
-// 		if gotId != wantId {
-// 			t.Errorf("Wrong id")
-// 		}
-
-// 		if status := response.Code; status != http.StatusOK {
-// 			t.Errorf("Wrong status")
-// 		}
-// 	})
-// }
 
 type createBody struct {
 	Cards    []string `json:"cards"`
@@ -184,9 +158,6 @@ func TestCreate(t *testing.T) {
 
 			json.NewDecoder(bytes.NewReader(body)).Decode(&jsonResponse)
 
-			gotId := jsonResponse.Id
-			wantId := 0
-
 			gotRemaining := jsonResponse.Remaining
 			var wantRemaining int
 			if testBody.Cards == nil || len(testBody.Cards) == 0 {
@@ -198,17 +169,50 @@ func TestCreate(t *testing.T) {
 			gotShuffled := jsonResponse.Shuffled
 			wantShuffled := testBody.Shuffled
 
-			assert.Equal(t, gotId, wantId)
+			// assert.Equal(t, gotId, wantId)
 			assert.Equal(t, gotRemaining, wantRemaining)
 			assert.Equal(t, gotShuffled, wantShuffled)
 		}
 	})
 }
 
-// var createResponse struct {
-// 	Error map[string]string `json:"error"`
-// }
+var errorResponse struct {
+	Error string `json:"error"`
+}
 
-// json.NewDecoder(response.Body).Decode(&createResponse)
+var deck data.Deck
 
-// fmt.Println(createResponse.Error.cards)
+func TestGetDeck(t *testing.T) {
+	app := newTestApplication(t)
+
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+
+	t.Run("Returns http.StatusNotFound for invalid id", func(t *testing.T) {
+		statusCode, _, _ := ts.get(t, "/v1/decks/wrongid")
+		assert.Equal(t, statusCode, http.StatusNotFound)
+	})
+
+	t.Run("Returns error message in JSON body", func(t *testing.T) {
+		_, _, body := ts.get(t, "/v1/decks/wrongid")
+		json.NewDecoder(bytes.NewReader(body)).Decode(&errorResponse)
+
+		want := "the requested resource could not be found"
+		assert.Equal(t, errorResponse.Error, want)
+	})
+
+	t.Run("Returns http.StatusOK for valid id", func(t *testing.T) {
+		statusCode, _, _ := ts.get(t, "/v1/decks/whatanid")
+		assert.Equal(t, statusCode, http.StatusOK)
+	})
+
+	t.Run("Returns deck_id, remaining, shuffled, and cards array for valid id", func(t *testing.T) {
+		_, _, body := ts.get(t, "/v1/decks/existingid")
+		json.NewDecoder(bytes.NewReader(body)).Decode(&deck)
+
+		assert.Equal(t, deck.ID, "existingid")
+		assert.Equal(t, deck.Shuffled, false)
+		assert.Equal(t, deck.Remaining, 2)
+		fmt.Printf("%+v", deck)
+	})
+}
