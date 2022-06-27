@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -22,6 +21,12 @@ type createBody struct {
 	Cards    []string `json:"cards"`
 	Shuffled bool     `json:shuffled"`
 }
+
+var errorResponse struct {
+	Error string `json:"error"`
+}
+
+var deck data.Deck
 
 func TestCreate(t *testing.T) {
 	app := newTestApplication(t)
@@ -176,12 +181,6 @@ func TestCreate(t *testing.T) {
 	})
 }
 
-var errorResponse struct {
-	Error string `json:"error"`
-}
-
-var deck data.Deck
-
 func TestGetDeck(t *testing.T) {
 	app := newTestApplication(t)
 
@@ -206,13 +205,36 @@ func TestGetDeck(t *testing.T) {
 		assert.Equal(t, statusCode, http.StatusOK)
 	})
 
-	t.Run("Returns deck_id, remaining, shuffled, and cards array for valid id", func(t *testing.T) {
+	t.Run("Returns deck_id, remaining, and shuffled for valid id", func(t *testing.T) {
 		_, _, body := ts.get(t, "/v1/decks/existingid")
 		json.NewDecoder(bytes.NewReader(body)).Decode(&deck)
 
 		assert.Equal(t, deck.ID, "existingid")
 		assert.Equal(t, deck.Shuffled, false)
 		assert.Equal(t, deck.Remaining, 2)
-		fmt.Printf("%+v", deck)
+	})
+
+	t.Run("Returns cards array for valid id with each card having suit, value and code fields", func(t *testing.T) {
+		_, _, body := ts.get(t, "/v1/decks/existingid")
+
+		type cardsArray struct {
+			Cards []struct {
+				Value string `json:"value"`
+				Suit  string `json:"suit"`
+				Code  string `json:"code"`
+			} `json:"cards"`
+		}
+
+		var ca cardsArray
+		json.NewDecoder(bytes.NewReader(body)).Decode(&ca)
+
+		firstCard := ca.Cards[0]
+		suit := firstCard.Suit
+		value := firstCard.Value
+		code := firstCard.Code
+
+		assert.Equal(t, suit, "SPADES")
+		assert.Equal(t, value, "ACE")
+		assert.Equal(t, code, "AS")
 	})
 }
