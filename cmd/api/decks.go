@@ -14,7 +14,7 @@ import (
 
 func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var input struct {
-		Shuffled bool        `json:"shuffled,omitempty"`
+		Shuffled bool        `json:"shuffled"`
 		Cards    []data.Card `json:"cards"`
 	}
 
@@ -28,6 +28,8 @@ func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request
 		Shuffled: input.Shuffled,
 		Cards:    input.Cards,
 	}
+
+	// fmt.Println(deck.Shuffled)
 
 	if deck.Cards != nil {
 		v := validator.New()
@@ -97,20 +99,72 @@ func (app *application) showDeckHandler(w http.ResponseWriter, r *http.Request, 
 }
 
 func (app *application) drawCardsHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var input struct {
+		Count int `json:"count"`
+	}
 
-	// id, err := app.readIDParam(ps)
-	// if err != nil {
-	// 	http.NotFound(w, r)
-	// 	return
-	// }
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
 
-	// count, err := app.readCountParam(ps)
-	// if err != nil {
-	// 	http.NotFound(w, r)
-	// 	return
-	// }
+	if input.Count <= 0 || input.Count > 52 {
+		error := map[string]string{
+			"count": "must not be between one and 52",
+		}
 
-	// fmt.Fprintf(w, "draw %d cards from deck %d\n", count, id)
+		app.failedValidationResponse(w, r, error)
+		return
+	}
+
+	id, err := app.readIDParam(ps)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	deck, err := app.models.Decks.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	if len(deck.StringCards) == 0 {
+		app.deckErrorResponse(w, r)
+		return
+	}
+
+	if input.Count > len(deck.StringCards) {
+		error := errors.New("count must not be more than remaining cards in deck")
+
+		app.badRequestResponse(w, r, error)
+		return
+	}
+
+	returnCards := deck.StringCards[:input.Count]
+	updateCards := deck.StringCards[input.Count:]
+
+	deck.Cards = generateJSONCards(updateCards)
+
+	err = app.models.Decks.Update(deck)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	var returnDeck data.Deck
+	returnDeck.Cards = generateJSONCards(returnCards)
+
+	err = app.writeJSON(w, http.StatusOK, returnDeck, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }
 
 func generateJSONCards(stringCards []string) []data.Card {

@@ -3,17 +3,17 @@ package main
 import (
 	"bytes"
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/scchi/cards/internal/data"
+	"github.com/scchi/cards/internal/jsonlog"
 )
 
 func newTestApplication(t *testing.T) *application {
 	return &application{
-		logger: log.New(io.Discard, "", 0),
+		logger: jsonlog.New(io.Discard, jsonlog.LevelInfo),
 		models: data.NewMockModels(),
 	}
 }

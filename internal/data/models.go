@@ -12,7 +12,7 @@ var (
 type Models struct {
 	Decks interface {
 		Insert(deck *Deck) error
-		Get(id int64) (*Deck, error)
+		Get(id string) (*Deck, error)
 		Update(deck *Deck) error
 		Draw(deck *Deck) error
 	}

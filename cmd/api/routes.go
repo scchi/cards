@@ -13,9 +13,9 @@ func (app *application) routes() *httprouter.Router {
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 
 	router.GET("/v1/healthcheck", app.healthcheckHandler)
-	router.POST("/v1/decks", app.createDeckHandler) // TODO: shuffled and partial as payload
+	router.POST("/v1/decks", app.createDeckHandler)
 	router.GET("/v1/decks/:id", app.showDeckHandler)
-	router.PATCH("/v1/decks/:id/count/:count", app.drawCardsHandler) // TODO: count as payload
+	router.PUT("/v1/decks/:id", app.drawCardsHandler) // TODO: count as payload
 
 	return router
 }

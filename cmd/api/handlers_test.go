@@ -3,8 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"net/http"
-	"strings"
+	"fmt"
 	"testing"
 
 	"github.com/scchi/cards/internal/assert"
@@ -34,104 +33,104 @@ func TestCreateDeck(t *testing.T) {
 	ts := newTestServer(t, app.routes())
 	defer ts.Close()
 
-	t.Run("returns http.StatusUnprocessableEntity", func(t *testing.T) {
-		testBodies := []map[string]interface{}{
-			{
-				"shuffled": false,
-				"cards":    []string{"AS", "AS"},
-			},
-			{
-				"cards": []string{"RR"},
-			},
-			{
-				"cards": []string{"8D", "ZZ"},
-			},
-		}
+	// t.Run("returns http.StatusUnprocessableEntity", func(t *testing.T) {
+	// 	testBodies := []map[string]interface{}{
+	// 		{
+	// 			"shuffled": false,
+	// 			"cards":    []string{"AS", "AS"},
+	// 		},
+	// 		{
+	// 			"cards": []string{"RR"},
+	// 		},
+	// 		{
+	// 			"cards": []string{"8D", "ZZ"},
+	// 		},
+	// 	}
 
-		for _, testBody := range testBodies {
-			js, err := json.Marshal(testBody)
-			if err != nil {
-				t.Fatal(err)
-			}
+	// 	for _, testBody := range testBodies {
+	// 		js, err := json.Marshal(testBody)
+	// 		if err != nil {
+	// 			t.Fatal(err)
+	// 		}
 
-			statusCode, _, _ := ts.post(t, "/v1/decks", bytes.NewReader(js))
-			assert.Equal(t, statusCode, http.StatusUnprocessableEntity)
-		}
-	})
+	// 		statusCode, _, _ := ts.post(t, "/v1/decks", bytes.NewReader(js))
+	// 		assert.Equal(t, statusCode, http.StatusUnprocessableEntity)
+	// 	}
+	// })
 
-	t.Run("returns http.StatusCreated for valid request body", func(t *testing.T) {
-		testBodies := []map[string]interface{}{
-			{},
-			{
-				"shuffled": true,
-			},
-			{
-				"cards": []string{},
-			},
-			{
-				"cards": []string{"AS"},
-			},
-			{
-				"cards": []string{"7D", "AH"},
-			},
-			{
-				"shuffled": false,
-				"cards":    []string{"AC", "KH"},
-			},
-		}
+	// t.Run("returns http.StatusCreated for valid request body", func(t *testing.T) {
+	// 	testBodies := []map[string]interface{}{
+	// 		{},
+	// 		{
+	// 			"shuffled": true,
+	// 		},
+	// 		{
+	// 			"cards": []string{},
+	// 		},
+	// 		{
+	// 			"cards": []string{"AS"},
+	// 		},
+	// 		{
+	// 			"cards": []string{"7D", "AH"},
+	// 		},
+	// 		{
+	// 			"shuffled": false,
+	// 			"cards":    []string{"AC", "KH"},
+	// 		},
+	// 	}
 
-		want := http.StatusCreated
+	// 	want := http.StatusCreated
 
-		for _, testBody := range testBodies {
-			js, err := json.Marshal(testBody)
-			if err != nil {
-				t.Fatal(err)
-			}
+	// 	for _, testBody := range testBodies {
+	// 		js, err := json.Marshal(testBody)
+	// 		if err != nil {
+	// 			t.Fatal(err)
+	// 		}
 
-			statusCode, _, _ := ts.post(t, "/v1/decks", bytes.NewReader(js))
-			assert.Equal(t, statusCode, want)
-		}
-	})
+	// 		statusCode, _, _ := ts.post(t, "/v1/decks", bytes.NewReader(js))
+	// 		assert.Equal(t, statusCode, want)
+	// 	}
+	// })
 
-	t.Run("Returns valid Location header for valid requests", func(t *testing.T) {
-		testBodies := []map[string]interface{}{
-			{},
-			{
-				"shuffled": true,
-			},
-			{
-				"cards": []string{},
-			},
-			{
-				"cards": []string{"AS"},
-			},
-			{
-				"cards": []string{"7D", "AH"},
-			},
-			{
-				"shuffled": false,
-				"cards":    []string{"AC", "KH"},
-			},
-		}
+	// t.Run("Returns valid Location header for valid requests", func(t *testing.T) {
+	// 	testBodies := []map[string]interface{}{
+	// 		{},
+	// 		{
+	// 			"shuffled": true,
+	// 		},
+	// 		{
+	// 			"cards": []string{},
+	// 		},
+	// 		{
+	// 			"cards": []string{"AS"},
+	// 		},
+	// 		{
+	// 			"cards": []string{"7D", "AH"},
+	// 		},
+	// 		{
+	// 			"shuffled": false,
+	// 			"cards":    []string{"AC", "KH"},
+	// 		},
+	// 	}
 
-		want := "/v1/decks/"
+	// 	want := "/v1/decks/"
 
-		for _, testBody := range testBodies {
-			js, err := json.Marshal(testBody)
-			if err != nil {
-				t.Fatal(err)
-			}
+	// 	for _, testBody := range testBodies {
+	// 		js, err := json.Marshal(testBody)
+	// 		if err != nil {
+	// 			t.Fatal(err)
+	// 		}
 
-			_, header, _ := ts.post(t, "/v1/decks", bytes.NewReader(js))
+	// 		_, header, _ := ts.post(t, "/v1/decks", bytes.NewReader(js))
 
-			locationHeader := header["Location"][0]
+	// 		locationHeader := header["Location"][0]
 
-			// TODO: test suffix for UUID regex
-			if !strings.HasPrefix(locationHeader, want) {
-				t.Errorf("expecting header prefix of %s, got %s", want, locationHeader)
-			}
-		}
-	})
+	// 		// TODO: test suffix for UUID regex
+	// 		if !strings.HasPrefix(locationHeader, want) {
+	// 			t.Errorf("expecting header prefix of %s, got %s", want, locationHeader)
+	// 		}
+	// 	}
+	// })
 
 	t.Run("Valid requests return JSON with deck_id, remaining, and shuffled fields ", func(t *testing.T) {
 		testBodies := []createBody{
@@ -141,7 +140,7 @@ func TestCreateDeck(t *testing.T) {
 				Cards:    []string{},
 			},
 			{
-				Shuffled: false,
+				Shuffled: true,
 				Cards: []string{
 					"AS", "4D",
 				},
@@ -174,6 +173,9 @@ func TestCreateDeck(t *testing.T) {
 			gotShuffled := jsonResponse.Shuffled
 			wantShuffled := testBody.Shuffled
 
+			fmt.Println(gotShuffled)
+			fmt.Println(wantShuffled)
+
 			// assert.Equal(t, gotId, wantId)
 			assert.Equal(t, gotRemaining, wantRemaining)
 			assert.Equal(t, gotShuffled, wantShuffled)
@@ -181,74 +183,118 @@ func TestCreateDeck(t *testing.T) {
 	})
 }
 
-func TestGetDeck(t *testing.T) {
-	app := newTestApplication(t)
+// func TestGetDeck(t *testing.T) {
+// 	app := newTestApplication(t)
 
-	ts := newTestServer(t, app.routes())
-	defer ts.Close()
+// 	ts := newTestServer(t, app.routes())
+// 	defer ts.Close()
 
-	t.Run("Returns http.StatusNotFound for invalid id", func(t *testing.T) {
-		statusCode, _, _ := ts.get(t, "/v1/decks/wrongid")
-		assert.Equal(t, statusCode, http.StatusNotFound)
-	})
+// 	t.Run("Returns http.StatusNotFound for invalid id", func(t *testing.T) {
+// 		statusCode, _, _ := ts.get(t, "/v1/decks/wrongid")
+// 		assert.Equal(t, statusCode, http.StatusNotFound)
+// 	})
 
-	t.Run("Returns error message in JSON body", func(t *testing.T) {
-		_, _, body := ts.get(t, "/v1/decks/wrongid")
-		json.NewDecoder(bytes.NewReader(body)).Decode(&errorResponse)
+// 	t.Run("Returns error message in JSON body", func(t *testing.T) {
+// 		_, _, body := ts.get(t, "/v1/decks/wrongid")
+// 		json.NewDecoder(bytes.NewReader(body)).Decode(&errorResponse)
 
-		want := "the requested resource could not be found"
-		assert.Equal(t, errorResponse.Error, want)
-	})
+// 		want := "the requested resource could not be found"
+// 		assert.Equal(t, errorResponse.Error, want)
+// 	})
 
-	t.Run("Returns http.StatusOK for valid id", func(t *testing.T) {
-		statusCode, _, _ := ts.get(t, "/v1/decks/whatanid")
-		assert.Equal(t, statusCode, http.StatusOK)
-	})
+// 	t.Run("Returns http.StatusOK for valid id", func(t *testing.T) {
+// 		statusCode, _, _ := ts.get(t, "/v1/decks/whatanid")
+// 		assert.Equal(t, statusCode, http.StatusOK)
+// 	})
 
-	t.Run("Returns deck_id, remaining, and shuffled for valid id", func(t *testing.T) {
-		_, _, body := ts.get(t, "/v1/decks/existingid")
-		json.NewDecoder(bytes.NewReader(body)).Decode(&deck)
+// 	t.Run("Returns deck_id, remaining, and shuffled for valid id", func(t *testing.T) {
+// 		_, _, body := ts.get(t, "/v1/decks/existingid")
+// 		json.NewDecoder(bytes.NewReader(body)).Decode(&deck)
 
-		assert.Equal(t, deck.ID, "existingid")
-		assert.Equal(t, deck.Shuffled, false)
-		assert.Equal(t, deck.Remaining, 2)
-	})
+// 		assert.Equal(t, deck.ID, "existingid")
+// 		assert.Equal(t, deck.Shuffled, false)
+// 		assert.Equal(t, deck.Remaining, 2)
+// 	})
 
-	t.Run("Returns cards array for valid id with each card having suit, value and code fields", func(t *testing.T) {
-		_, _, body := ts.get(t, "/v1/decks/existingid")
+// 	t.Run("Returns cards array for valid id with each card having suit, value and code fields", func(t *testing.T) {
+// 		_, _, body := ts.get(t, "/v1/decks/existingid")
 
-		type cardsArray struct {
-			Cards []struct {
-				Value string `json:"value"`
-				Suit  string `json:"suit"`
-				Code  string `json:"code"`
-			} `json:"cards"`
-		}
+// 		type cardsArray struct {
+// 			Cards []struct {
+// 				Value string `json:"value"`
+// 				Suit  string `json:"suit"`
+// 				Code  string `json:"code"`
+// 			} `json:"cards"`
+// 		}
 
-		var ca cardsArray
-		json.NewDecoder(bytes.NewReader(body)).Decode(&ca)
+// 		var ca cardsArray
+// 		json.NewDecoder(bytes.NewReader(body)).Decode(&ca)
 
-		firstCard := ca.Cards[0]
-		suit := firstCard.Suit
-		value := firstCard.Value
-		code := firstCard.Code
+// 		firstCard := ca.Cards[0]
+// 		suit := firstCard.Suit
+// 		value := firstCard.Value
+// 		code := firstCard.Code
 
-		assert.Equal(t, suit, "SPADES")
-		assert.Equal(t, value, "ACE")
-		assert.Equal(t, code, "AS")
-	})
-}
+// 		assert.Equal(t, suit, "SPADES")
+// 		assert.Equal(t, value, "ACE")
+// 		assert.Equal(t, code, "AS")
+// 	})
+// }
 
-func TestDrawDeck(t *testing.T) {
-	t.Run("Should return an error if deck has been drawn", func(t *testing.T) {
-		t.Errorf("todo")
-	})
+// func TestDrawDeck(t *testing.T) {
+// 	app := newTestApplication(t)
 
-	t.Run("Should return an error if deck with given id doesn't exist", func(t *testing.T) {
-		t.Errorf("todo")
-	})
+// 	t.Run("Should return an error if count is less than 1 or greater than 52", func(t *testing.T) {
+// 		counts := []map[string]int{
+// 			{
+// 				"count": 0,
+// 			},
+// 			{
+// 				"count": -1,
+// 			},
+// 			{
+// 				"count": 53,
+// 			},
+// 		}
 
-	t.Run("Should return JSOn with cards array and with each card having suit, value, and code fields", func(t *testing.T) {
-		t.Errorf("todo")
-	})
-}
+// 		for _, count := range counts {
+// 			countBytes, _ := json.Marshal(count)
+// 			req, err := http.NewRequest(http.MethodPut, "/v1/decks/5", bytes.NewReader(countBytes))
+// 			if err != nil {
+// 				t.Fatal(err)
+// 			}
+
+// 			rr := httptest.NewRecorder()
+
+// 			app.routes().ServeHTTP(rr, req)
+
+// 			assert.Equal(t, rr.Code, http.StatusUnprocessableEntity)
+// 		}
+// 	})
+
+// t.Run("Returns http.StatusNotFound for invalid id", func(t *testing.T) {
+// 	countBytes, _ := json.Marshal(map[string]int{"count": 1})
+// 	req, err := http.NewRequest(http.MethodPut, "v1/decks/wrongid", bytes.NewReader(countBytes))
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+
+// 	rr := httptest.NewRecorder()
+
+// 	app.routes().ServeHTTP(rr, req)
+
+// 	assert.Equal(t, rr.Code, http.StatusNotFound)
+// })
+// }
+
+// t.Run("Should return an error if deck has been drawn", func(t *testing.T) {
+// 	t.Errorf("todo")
+// })
+
+// t.Run("Should return an error if deck with given id doesn't exist", func(t *testing.T) {
+// 	t.Errorf("todo")
+// })
+
+// t.Run("Should return JSOn with cards array and with each card having suit, value, and code fields", func(t *testing.T) {
+// 	t.Errorf("todo")
+// })
