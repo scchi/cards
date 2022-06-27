@@ -28,7 +28,7 @@ var errorResponse struct {
 
 var deck data.Deck
 
-func TestCreate(t *testing.T) {
+func TestCreateDeck(t *testing.T) {
 	app := newTestApplication(t)
 
 	ts := newTestServer(t, app.routes())
@@ -236,5 +236,19 @@ func TestGetDeck(t *testing.T) {
 		assert.Equal(t, suit, "SPADES")
 		assert.Equal(t, value, "ACE")
 		assert.Equal(t, code, "AS")
+	})
+}
+
+func TestDrawDeck(t *testing.T) {
+	t.Run("Should return an error if deck has been drawn", func(t *testing.T) {
+		t.Errorf("todo")
+	})
+
+	t.Run("Should return an error if deck with given id doesn't exist", func(t *testing.T) {
+		t.Errorf("todo")
+	})
+
+	t.Run("Should return JSOn with cards array and with each card having suit, value, and code fields", func(t *testing.T) {
+		t.Errorf("todo")
 	})
 }
