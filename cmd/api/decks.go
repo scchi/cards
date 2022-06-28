@@ -29,8 +29,6 @@ func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request
 		Cards:    input.Cards,
 	}
 
-	// fmt.Println(deck.Shuffled)
-
 	if deck.Cards != nil {
 		v := validator.New()
 
@@ -111,7 +109,7 @@ func (app *application) drawCardsHandler(w http.ResponseWriter, r *http.Request,
 
 	if input.Count <= 0 || input.Count > 52 {
 		error := map[string]string{
-			"count": "must not be between one and 52",
+			"count": "must be between one and 52",
 		}
 
 		app.failedValidationResponse(w, r, error)
@@ -158,17 +156,16 @@ func (app *application) drawCardsHandler(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	var returnDeck data.Deck
-	returnDeck.Cards = generateJSONCards(returnCards)
+	returnDeck := generateJSONCards(returnCards)
 
-	err = app.writeJSON(w, http.StatusOK, returnDeck, nil)
+	err = app.writeJSON(w, http.StatusOK, map[string][]data.Card{"cards": returnDeck}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
 
 func generateJSONCards(stringCards []string) []data.Card {
-	var result []data.Card
+	result := []data.Card{}
 
 	for _, card := range stringCards {
 		result = append(result, data.Card(card))

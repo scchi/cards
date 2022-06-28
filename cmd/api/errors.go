@@ -50,6 +50,6 @@ func (app *application) failedValidationResponse(w http.ResponseWriter, r *http.
 }
 
 func (app *application) deckErrorResponse(w http.ResponseWriter, r *http.Request) {
-	message := fmt.Sprint("the deck has been dealt")
+	message := "the deck has been dealt"
 	app.errorResponse(w, r, http.StatusBadRequest, message)
 }

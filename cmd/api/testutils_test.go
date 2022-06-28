@@ -2,9 +2,11 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/scchi/cards/internal/data"
@@ -57,4 +59,37 @@ func (ts *testServer) post(t *testing.T, urlPath string, testBody io.Reader) (in
 	bytes.TrimSpace(body)
 
 	return rs.StatusCode, rs.Header, body
+}
+
+func newTestDB(t *testing.T) *sql.DB {
+	db, err := sql.Open("postgres", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	script, err := os.ReadFile("./testdata/setup.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = db.Exec(string(script))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Cleanup(func() {
+		script, err := os.ReadFile("./testdata/teardown.sql")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = db.Exec(string(script))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		db.Close()
+	})
+
+	return db
 }
