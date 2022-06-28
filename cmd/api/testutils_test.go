@@ -93,3 +93,24 @@ func newTestDB(t *testing.T) *sql.DB {
 
 	return db
 }
+
+func countDecks(t *testing.T, db *sql.DB, count *int) {
+	query := "SELECT COUNT(*) FROM decks"
+
+	err := db.QueryRow(query).Scan(count)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func rowExists(t *testing.T, db *sql.DB, id string, count *int) {
+	query := `
+	SELECT COUNT(*)
+	FROM decks
+	WHERE id::text = $1`
+
+	err := db.QueryRow(query, id).Scan(count)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
