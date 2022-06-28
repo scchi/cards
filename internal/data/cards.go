@@ -22,12 +22,8 @@ var values = map[string]string{
 }
 
 func (c Card) MarshalJSON() ([]byte, error) {
-	value := string(c[0])
-	if number, _ := strconv.Atoi(value); number == 0 {
-		value = values[value]
-	}
-
-	suit := suits[string(c[1])]
+	value := c.GetValue()
+	suit := c.GetSuit()
 
 	jsonValue := map[string]string{
 		"value": value,
@@ -38,4 +34,17 @@ func (c Card) MarshalJSON() ([]byte, error) {
 	js, _ := json.Marshal(jsonValue)
 
 	return js, nil
+}
+
+func (c Card) GetSuit() string {
+	return suits[string(c[1])]
+}
+
+func (c Card) GetValue() string {
+	value := string(c[0])
+	if number, _ := strconv.Atoi(value); number == 0 {
+		value = values[value]
+	}
+
+	return value
 }

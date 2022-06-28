@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/scchi/cards/internal/assert"
@@ -15,9 +16,7 @@ type createRequest struct {
 	Cards    []string `json:"cards"`
 }
 
-type drawRequest struct {
-	Count int `json:"count"`
-}
+var ca cardsArray
 
 var path = "/v1/decks"
 
@@ -56,10 +55,10 @@ func TestCreate(t *testing.T) {
 			var deck data.Deck
 			json.NewDecoder(bytes.NewReader(body)).Decode(&deck)
 
-			var count int
-			rowExists(t, testDB, deck.ID, &count)
+			var rowCount int
+			rowExists(t, testDB, deck.ID, &rowCount)
 
-			assert.Equal(t, count, 1)
+			assert.Equal(t, rowCount, 1)
 			assert.Equal(t, statusCode, http.StatusCreated)
 			assert.Equal(t, deck.Shuffled, testBody.Shuffled)
 			assert.Equal(t, deck.Remaining, len(testBody.Cards))
@@ -87,10 +86,10 @@ func TestCreate(t *testing.T) {
 			var deck data.Deck
 			json.NewDecoder(bytes.NewReader(body)).Decode(&deck)
 
-			var count int
-			rowExists(t, testDB, deck.ID, &count)
+			var rowCount int
+			rowExists(t, testDB, deck.ID, &rowCount)
 
-			assert.Equal(t, count, 1)
+			assert.Equal(t, rowCount, 1)
 			assert.Equal(t, statusCode, http.StatusCreated)
 			assert.Equal(t, deck.Shuffled, testBody.Shuffled)
 			assert.Equal(t, deck.Remaining, 52)
@@ -116,8 +115,6 @@ func TestCreate(t *testing.T) {
 
 			locationHeader := header["Location"][0]
 			_, _, body = ts.get(t, locationHeader)
-
-			var ca cardsArray
 			json.NewDecoder(bytes.NewReader(body)).Decode(&ca)
 
 			firstCard := ca.Cards[0]
@@ -152,17 +149,12 @@ func TestCreate(t *testing.T) {
 			locationHeader := header["Location"][0]
 			_, _, body = ts.get(t, locationHeader)
 
-			var ca cardsArray
 			json.NewDecoder(bytes.NewReader(body)).Decode(&ca)
 
 			firstCard := ca.Cards[0]
 
 			if firstCard.Code == "AH" {
 				t.Error("Cards must not be shuffled")
-			}
-
-			if i == 29 {
-				break
 			}
 		}
 	})
@@ -185,18 +177,12 @@ func TestCreate(t *testing.T) {
 
 			locationHeader := header["Location"][0]
 			_, _, body = ts.get(t, locationHeader)
-
-			var ca cardsArray
 			json.NewDecoder(bytes.NewReader(body)).Decode(&ca)
 
 			firstCard := ca.Cards[0]
 
 			if firstCard.Code == "KH" {
 				t.Error("Cards must not be shuffled")
-			}
-
-			if i == 19 {
-				break
 			}
 		}
 	})
@@ -325,10 +311,10 @@ func TestGet(t *testing.T) {
 		var deck data.Deck
 		json.NewDecoder(bytes.NewReader(body)).Decode(&deck)
 
-		var count int
-		rowExists(t, testDB, deck.ID, &count)
+		var rowCount int
+		rowExists(t, testDB, deck.ID, &rowCount)
 
-		assert.Equal(t, count, 1)
+		assert.Equal(t, rowCount, 1)
 
 		locationHeader := header["Location"][0]
 		statusCode, _, body := ts.get(t, locationHeader)
@@ -358,8 +344,6 @@ func TestGet(t *testing.T) {
 
 		locationHeader := header["Location"][0]
 		_, _, body = ts.get(t, locationHeader)
-
-		var ca cardsArray
 		json.NewDecoder(bytes.NewReader(body)).Decode(&ca)
 
 		firstCard := ca.Cards[0]
@@ -375,5 +359,155 @@ func TestGet(t *testing.T) {
 }
 
 func TestDraw(t *testing.T) {
+	app := newTestApplication(t)
 
+	testDB := newTestDB(t)
+	app.models = data.NewModels(testDB)
+
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
+
+	t.Run("Returns http.StatusNotFound for invalid id", func(t *testing.T) {
+		countBytes, _ := json.Marshal(map[string]int{"count": 1})
+		req, err := http.NewRequest(http.MethodPut, "/v1/decks/wrongid", bytes.NewReader(countBytes))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		rr := httptest.NewRecorder()
+
+		app.routes().ServeHTTP(rr, req)
+
+		assert.Equal(t, rr.Code, http.StatusNotFound)
+	})
+
+	t.Run("Should return an error if deck with given id doesn't exist", func(t *testing.T) {
+		countBytes, _ := json.Marshal(map[string]int{"count": 1})
+		req, err := http.NewRequest(http.MethodPut, "/v1/decks/"+data.MockID, bytes.NewReader(countBytes))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		rr := httptest.NewRecorder()
+
+		app.routes().ServeHTTP(rr, req)
+
+		assert.Equal(t, rr.Code, http.StatusNotFound)
+	})
+
+	t.Run("Should return Cards array with length equal to count value in request body", func(t *testing.T) {
+		newDeck := createRequest{
+			Shuffled: false,
+			Cards:    []string{"AC", "KH", "QD", "3H", "5S", "AH", "KS"},
+		}
+
+		js, err := json.Marshal(newDeck)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, header, _ := ts.post(t, path, bytes.NewReader(js))
+		locationHeader := header["Location"][0]
+
+		counts := []int{
+			3, 1,
+		}
+
+		for _, count := range counts {
+			countBytes, _ := json.Marshal(map[string]int{"count": count})
+			req, err := http.NewRequest(http.MethodPut, locationHeader, bytes.NewReader(countBytes))
+			if err != nil {
+				t.Fatal(err)
+			}
+			rr := httptest.NewRecorder()
+			app.routes().ServeHTTP(rr, req)
+
+			json.NewDecoder(rr.Body).Decode(&ca)
+			assert.Equal(t, len(ca.Cards), count)
+
+			for idx, card := range ca.Cards {
+				wantCard := newDeck.Cards[idx]
+
+				assert.Equal(t, card.Suit, getSuit(wantCard))
+				assert.Equal(t, card.Value, getValue(wantCard))
+				assert.Equal(t, card.Code, wantCard)
+			}
+
+			newDeck.Cards = newDeck.Cards[count:]
+			assert.Equal(t, rr.Code, http.StatusOK)
+		}
+	})
+
+	t.Run("Deck length should be decremented by count value in request", func(t *testing.T) {
+		newDeck := createRequest{
+			Shuffled: false,
+			Cards:    []string{"AC", "KH", "QD", "3H", "5S"},
+		}
+
+		js, err := json.Marshal(newDeck)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		counts := []int{
+			1, 3,
+		}
+
+		for _, count := range counts {
+			_, header, body := ts.post(t, path, bytes.NewReader(js))
+			locationHeader := header["Location"][0]
+			json.NewDecoder(bytes.NewReader(body)).Decode(&deck)
+			beforeRemaining := deck.Remaining
+
+			countBytes, _ := json.Marshal(map[string]int{"count": count})
+			req, err := http.NewRequest(http.MethodPut, locationHeader, bytes.NewReader(countBytes))
+			if err != nil {
+				t.Fatal(err)
+			}
+			rr := httptest.NewRecorder()
+			app.routes().ServeHTTP(rr, req)
+
+			_, _, body = ts.get(t, locationHeader)
+			json.NewDecoder(bytes.NewReader(body)).Decode(&deck)
+			afterRemaining := deck.Remaining
+			assert.Equal(t, beforeRemaining-count, afterRemaining)
+		}
+	})
+
+	t.Run("Cards in deck should be drawn starting from the zeroth index", func(t *testing.T) {
+		newDeck := createRequest{
+			Shuffled: false,
+			Cards:    []string{"AC", "KH", "QD", "3H", "5S"},
+		}
+
+		js, err := json.Marshal(newDeck)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, header, _ := ts.post(t, path, bytes.NewReader(js))
+		locationHeader := header["Location"][0]
+
+		counts := []int{
+			1, 3,
+		}
+
+		for _, count := range counts {
+
+			countBytes, _ := json.Marshal(map[string]int{"count": count})
+			req, err := http.NewRequest(http.MethodPut, locationHeader, bytes.NewReader(countBytes))
+			if err != nil {
+				t.Fatal(err)
+			}
+			rr := httptest.NewRecorder()
+			app.routes().ServeHTTP(rr, req)
+
+			_, _, body := ts.get(t, locationHeader)
+			json.NewDecoder(bytes.NewReader(body)).Decode(&ca)
+
+			assert.Equal(t, ca.Cards[0].Code, newDeck.Cards[count])
+
+			newDeck.Cards = newDeck.Cards[count:]
+		}
+	})
 }

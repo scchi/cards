@@ -114,3 +114,11 @@ func rowExists(t *testing.T, db *sql.DB, id string, count *int) {
 		t.Fatal(err)
 	}
 }
+
+func getSuit(card string) string {
+	return data.Card(card).GetSuit()
+}
+
+func getValue(card string) string {
+	return data.Card(card).GetValue()
+}
