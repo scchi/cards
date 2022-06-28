@@ -62,12 +62,12 @@ func (ts *testServer) post(t *testing.T, urlPath string, testBody io.Reader) (in
 }
 
 func newTestDB(t *testing.T) *sql.DB {
-	db, err := sql.Open("postgres", "")
+	db, err := sql.Open("postgres", "postgres://test_deck:pa$$word@localhost/test_deck")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	script, err := os.ReadFile("./testdata/setup.sql")
+	script, err := os.ReadFile("../../internal/data/testdata/setup.sql")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,7 +78,7 @@ func newTestDB(t *testing.T) *sql.DB {
 	}
 
 	t.Cleanup(func() {
-		script, err := os.ReadFile("./testdata/teardown.sql")
+		script, err := os.ReadFile("../../internal/data/testdata/teardown.sql")
 		if err != nil {
 			t.Fatal(err)
 		}
