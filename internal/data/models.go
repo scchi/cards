@@ -14,8 +14,8 @@ type Models struct {
 		Insert(deck *Deck) error
 		Get(id string) (*Deck, error)
 		Update(deck *Deck) error
-		Draw(deck *Deck) error
 	}
+	Data map[string]string
 }
 
 func NewModels(db *sql.DB) Models {

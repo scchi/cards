@@ -11,9 +11,9 @@ import (
 )
 
 type Deck struct {
-	ID          string    `json:"deck_id,omitempty"`
+	ID          string    `json:"deck_id"`
 	Shuffled    bool      `json:"shuffled"`
-	Remaining   int       `json:"remaining,omitempty"`
+	Remaining   int       `json:"remaining"`
 	Cards       []Card    `json:"cards,omitempty"`
 	StringCards []string  `json:"-"`
 	CreatedAt   time.Time `json:"-"`
@@ -38,7 +38,6 @@ func GenerateCards() []Card {
 		}
 	}
 
-	fmt.Printf("%+v", result)
 	return result
 }
 
@@ -105,41 +104,40 @@ func (d DeckModel) Update(deck *Deck) error {
 	return d.DB.QueryRow(query, args...).Scan(&deck.Version)
 }
 
-func (d DeckModel) Draw(deck *Deck) error {
-	return nil
-}
-
 // -------------------------------------------------
 
 type MockDeckModel struct{}
 
+var MockID = "a23d446a-f01a-4d6e-bec3-f928a3457ac7"
+var MockShuffled = true
+var MockCards = []string{
+	"AS",
+	"9D",
+}
+
 func (m MockDeckModel) Insert(deck *Deck) error {
-	deck.ID = "a23d446a-f01a-4d6e-bec3-f928a3457ac7"
+	deck.ID = MockID
 	return nil
 }
 
 func (m MockDeckModel) Get(id string) (*Deck, error) {
-	if id == "wrongid" {
+	if len(id) != 36 {
+		return nil, ErrRecordNotFound
+	}
+
+	if id != MockID {
 		return nil, ErrRecordNotFound
 	}
 
 	deck := Deck{
-		ID:       id,
-		Shuffled: true,
-		StringCards: []string{
-			"AS",
-			"9D",
-		},
+		ID:          id,
+		Shuffled:    MockShuffled,
+		StringCards: MockCards,
 	}
 
 	return &deck, nil
 }
 
 func (m MockDeckModel) Update(deck *Deck) error {
-	return nil
-}
-
-func (m MockDeckModel) Draw(deck *Deck) error {
-
 	return nil
 }
