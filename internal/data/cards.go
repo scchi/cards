@@ -37,7 +37,17 @@ func (c Card) MarshalJSON() ([]byte, error) {
 	return js, nil
 }
 
-func GenerateCards() []Card {
+func GenerateCards(stringCards []string) []Card {
+	var result []Card
+
+	for _, card := range stringCards {
+		result = append(result, Card(card))
+	}
+
+	return result
+}
+
+func GenerateAllCards() []Card {
 	var result []Card
 
 	values := []string{

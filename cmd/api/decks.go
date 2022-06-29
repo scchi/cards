@@ -36,7 +36,7 @@ func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	prepDeckForInsert(deck)
+	prepForInsert(deck)
 
 	err = app.models.Decks.Insert(deck)
 	if err != nil {
@@ -44,7 +44,7 @@ func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	prepDeckForResponse(deck)
+	prepForCreateResponse(deck)
 
 	headers := make(http.Header)
 	headers.Set("Location", fmt.Sprintf("/v1/decks/%s", deck.ID))
@@ -73,8 +73,7 @@ func (app *application) showDeckHandler(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	deck.Cards = generateJSONCards(deck.StringCards)
-	deck.Remaining = len(deck.Cards)
+	prepForShowResponse(deck)
 
 	err = app.writeJSON(w, http.StatusOK, deck, nil)
 	if err != nil {
@@ -134,7 +133,7 @@ func (app *application) drawCardsHandler(w http.ResponseWriter, r *http.Request,
 	returnCards := deck.StringCards[:input.Count]
 	updateCards := deck.StringCards[input.Count:]
 
-	deck.Cards = generateJSONCards(updateCards)
+	deck.Cards = data.GenerateCards(updateCards)
 
 	err = app.models.Decks.Update(deck)
 	if err != nil {
@@ -142,20 +141,10 @@ func (app *application) drawCardsHandler(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	returnDeck := generateJSONCards(returnCards)
+	returnDeck := data.GenerateCards(returnCards)
 
 	err = app.writeJSON(w, http.StatusOK, map[string][]data.Card{"cards": returnDeck}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
-}
-
-func generateJSONCards(stringCards []string) []data.Card {
-	result := []data.Card{}
-
-	for _, card := range stringCards {
-		result = append(result, data.Card(card))
-	}
-
-	return result
 }

@@ -24,7 +24,7 @@ func ValidateDeck(v *validator.Validator, deck *Deck) {
 	v.Check(validator.Unique(deck.Cards), "cards", "must not contain duplicated values")
 	v.Check(len(deck.Cards) <= 52, "cards", "must not contain more than 52 cards")
 
-	permittedCards := GenerateCards()
+	permittedCards := GenerateAllCards()
 	v.Check(validator.PermittedValues(deck.Cards, permittedCards), "cards", "contains invalid card")
 }
 

@@ -134,9 +134,9 @@ func openDB(cfg config) (*sql.DB, error) {
 	return db, nil
 }
 
-func prepDeckForInsert(deck *data.Deck) {
+func prepForInsert(deck *data.Deck) {
 	if len(deck.Cards) == 0 || deck.Cards == nil {
-		deck.Cards = data.GenerateCards()
+		deck.Cards = data.GenerateAllCards()
 	}
 
 	if deck.Shuffled {
@@ -144,7 +144,12 @@ func prepDeckForInsert(deck *data.Deck) {
 	}
 }
 
-func prepDeckForResponse(deck *data.Deck) {
+func prepForCreateResponse(deck *data.Deck) {
 	deck.Remaining = len(deck.Cards)
 	deck.Cards = []data.Card{}
+}
+
+func prepForShowResponse(deck *data.Deck) {
+	deck.Cards = data.GenerateCards(deck.StringCards)
+	deck.Remaining = len(deck.Cards)
 }
