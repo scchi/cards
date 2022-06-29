@@ -1,7 +1,5 @@
 package validator
 
-import "regexp"
-
 type Validator struct {
 	Errors map[string]string
 }
@@ -44,10 +42,6 @@ func PermittedValues[T comparable](values []T, permittedValues []T) bool {
 	}
 
 	return true
-}
-
-func Matches(value string, rx *regexp.Regexp) bool {
-	return rx.MatchString(value)
 }
 
 func Unique[T comparable](values []T) bool {

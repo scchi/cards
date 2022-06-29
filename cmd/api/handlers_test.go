@@ -13,23 +13,9 @@ import (
 	"github.com/scchi/cards/internal/data"
 )
 
-type createBody struct {
-	Cards    []string `json:"cards"`
-	Shuffled bool     `json:shuffled"`
-}
-
+var deck data.Deck
 var errorResponse struct {
 	Error string `json:"error"`
-}
-
-var deck data.Deck
-
-type cardsArray struct {
-	Cards []struct {
-		Value string `json:"value"`
-		Suit  string `json:"suit"`
-		Code  string `json:"code"`
-	} `json:"cards"`
 }
 
 func TestCreateDeck(t *testing.T) {

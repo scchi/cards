@@ -28,6 +28,8 @@ func ValidateCardsInput(v *validator.Validator, deck *Deck) {
 	v.Check(validator.PermittedValues(deck.Cards, permittedCards), "cards", "contains invalid card")
 }
 
+// -------------------------------------------------
+
 type DeckModel struct {
 	DB *sql.DB
 }

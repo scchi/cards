@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"database/sql"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +13,19 @@ import (
 	"github.com/scchi/cards/internal/data"
 	"github.com/scchi/cards/internal/jsonlog"
 )
+
+type createBody struct {
+	Shuffled bool     `json:"shuffled"`
+	Cards    []string `json:"cards"`
+}
+
+type cardsArray struct {
+	Cards []struct {
+		Value string `json:"value"`
+		Suit  string `json:"suit"`
+		Code  string `json:"code"`
+	} `json:"cards"`
+}
 
 func newTestApplication(t *testing.T) *application {
 	return &application{
@@ -59,6 +73,18 @@ func (ts *testServer) post(t *testing.T, urlPath string, testBody io.Reader) (in
 	bytes.TrimSpace(body)
 
 	return rs.StatusCode, rs.Header, body
+}
+func put(t *testing.T, app *application, body map[string]int, url string) (*httptest.ResponseRecorder, *http.Request) {
+	countBytes, _ := json.Marshal(body)
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(countBytes))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+
+	app.routes().ServeHTTP(rr, req)
+	return rr, req
 }
 
 func newTestDB(t *testing.T) *sql.DB {

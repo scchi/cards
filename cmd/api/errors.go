@@ -48,8 +48,3 @@ func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Reques
 func (app *application) failedValidationResponse(w http.ResponseWriter, r *http.Request, errors map[string]string) {
 	app.errorResponse(w, r, http.StatusUnprocessableEntity, errors)
 }
-
-func (app *application) deckErrorResponse(w http.ResponseWriter, r *http.Request) {
-	message := "the deck has been dealt"
-	app.errorResponse(w, r, http.StatusBadRequest, message)
-}
