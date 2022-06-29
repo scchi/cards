@@ -13,7 +13,6 @@ import (
 	"github.com/scchi/cards/internal/data"
 )
 
-var deck data.Deck
 var errorResponse struct {
 	Error string `json:"error"`
 }

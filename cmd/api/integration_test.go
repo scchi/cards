@@ -11,6 +11,7 @@ import (
 	"github.com/scchi/cards/internal/data"
 )
 
+var deck data.Deck
 var ca cardsArray
 var path = "/v1/decks"
 
@@ -46,7 +47,7 @@ func TestCreate(t *testing.T) {
 
 			statusCode, _, body := ts.post(t, path, bytes.NewReader(js))
 
-			var deck data.Deck
+			// var deck data.Deck
 			json.NewDecoder(bytes.NewReader(body)).Decode(&deck)
 
 			var rowCount int
@@ -77,7 +78,7 @@ func TestCreate(t *testing.T) {
 
 			statusCode, _, body := ts.post(t, path, bytes.NewReader(js))
 
-			var deck data.Deck
+			// var deck data.Deck
 			json.NewDecoder(bytes.NewReader(body)).Decode(&deck)
 
 			var rowCount int
@@ -104,7 +105,7 @@ func TestCreate(t *testing.T) {
 		for i := 0; i < 50; i++ {
 			_, header, body := ts.post(t, path, bytes.NewReader(js))
 
-			var deck data.Deck
+			// var deck data.Deck
 			json.NewDecoder(bytes.NewReader(body)).Decode(&deck)
 
 			locationHeader := header["Location"][0]
@@ -137,7 +138,7 @@ func TestCreate(t *testing.T) {
 		for i := 0; i < 50; i++ {
 			_, header, body := ts.post(t, path, bytes.NewReader(js))
 
-			var deck data.Deck
+			// var deck data.Deck
 			json.NewDecoder(bytes.NewReader(body)).Decode(&deck)
 
 			locationHeader := header["Location"][0]
@@ -166,7 +167,7 @@ func TestCreate(t *testing.T) {
 		for i := 0; i < 20; i++ {
 			_, header, body := ts.post(t, path, bytes.NewReader(js))
 
-			var deck data.Deck
+			// var deck data.Deck
 			json.NewDecoder(bytes.NewReader(body)).Decode(&deck)
 
 			locationHeader := header["Location"][0]
@@ -302,7 +303,7 @@ func TestGet(t *testing.T) {
 
 		_, header, body := ts.post(t, path, bytes.NewReader(js))
 
-		var deck data.Deck
+		// var deck data.Deck
 		json.NewDecoder(bytes.NewReader(body)).Decode(&deck)
 
 		var rowCount int
@@ -333,7 +334,7 @@ func TestGet(t *testing.T) {
 
 		_, header, body := ts.post(t, path, bytes.NewReader(js))
 
-		var deck data.Deck
+		// var deck data.Deck
 		json.NewDecoder(bytes.NewReader(body)).Decode(&deck)
 
 		locationHeader := header["Location"][0]
