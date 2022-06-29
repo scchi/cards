@@ -308,7 +308,7 @@ func TestDrawDeck(t *testing.T) {
 
 		app.routes().ServeHTTP(rr, req)
 
-		assert.Equal(t, rr.Code, http.StatusBadRequest)
+		assert.Equal(t, rr.Code, http.StatusUnprocessableEntity)
 	})
 
 	t.Run("Returns http.StatusNotFound for invalid id", func(t *testing.T) {

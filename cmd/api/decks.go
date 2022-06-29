@@ -30,13 +30,13 @@ func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request
 	if deck.Cards != nil {
 		v := validator.New()
 
-		if data.ValidateDeck(v, deck); !v.Valid() {
+		if data.ValidateCardsInput(v, deck); !v.Valid() {
 			app.failedValidationResponse(w, r, v.Errors)
 			return
 		}
 	}
 
-	prepForInsert(deck)
+	app.prepForInsert(deck)
 
 	err = app.models.Decks.Insert(deck)
 	if err != nil {
@@ -44,7 +44,7 @@ func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	prepForCreateResponse(deck)
+	app.prepForCreateResponse(deck)
 
 	headers := make(http.Header)
 	headers.Set("Location", fmt.Sprintf("/v1/decks/%s", deck.ID))
@@ -73,7 +73,7 @@ func (app *application) showDeckHandler(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	prepForShowResponse(deck)
+	app.prepForShowResponse(deck)
 
 	err = app.writeJSON(w, http.StatusOK, deck, nil)
 	if err != nil {
@@ -92,12 +92,10 @@ func (app *application) drawCardsHandler(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	if input.Count <= 0 || input.Count > 52 {
-		error := map[string]string{
-			"count": "must be between one and 52",
-		}
+	v := validator.New()
 
-		app.failedValidationResponse(w, r, error)
+	if app.validateCount(v, input.Count); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
@@ -118,22 +116,18 @@ func (app *application) drawCardsHandler(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	if len(deck.StringCards) == 0 {
-		app.deckErrorResponse(w, r)
+	v = validator.New()
+
+	if app.validateForDraw(v, input.Count, deck); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
-	if input.Count > len(deck.StringCards) {
-		error := errors.New("count must not be more than remaining cards in deck")
+	cardsForReturn := deck.StringCards[:input.Count]
+	cardsForUpdate := deck.StringCards[input.Count:]
 
-		app.badRequestResponse(w, r, error)
-		return
-	}
-
-	returnCards := deck.StringCards[:input.Count]
-	updateCards := deck.StringCards[input.Count:]
-
-	deck.Cards = data.GenerateCards(updateCards)
+	deck.Cards = data.GenerateCards(cardsForUpdate)
+	returnCards := data.GenerateCards(cardsForReturn)
 
 	err = app.models.Decks.Update(deck)
 	if err != nil {
@@ -141,9 +135,7 @@ func (app *application) drawCardsHandler(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	returnDeck := data.GenerateCards(returnCards)
-
-	err = app.writeJSON(w, http.StatusOK, map[string][]data.Card{"cards": returnDeck}, nil)
+	err = app.writeJSON(w, http.StatusOK, map[string][]data.Card{"cards": returnCards}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/scchi/cards/internal/data"
+	"github.com/scchi/cards/internal/validator"
 )
 
 func (app *application) readIDParam(ps httprouter.Params) (string, error) {
@@ -25,15 +25,6 @@ func (app *application) readIDParam(ps httprouter.Params) (string, error) {
 	id := ps.ByName("id")
 
 	return id, nil
-}
-
-func (app *application) readCountParam(ps httprouter.Params) (int64, error) {
-	count, err := strconv.ParseInt(ps.ByName("count"), 10, 64)
-	if err != nil || count < 1 {
-		return 0, errors.New("invalid count parameter")
-	}
-
-	return count, nil
 }
 
 func (app *application) writeJSON(w http.ResponseWriter, status int, data any, headers http.Header) error {
@@ -107,6 +98,38 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any
 	return nil
 }
 
+func (app *application) prepForInsert(deck *data.Deck) {
+	if len(deck.Cards) == 0 || deck.Cards == nil {
+		deck.Cards = data.GenerateAllCards()
+	}
+
+	if deck.Shuffled {
+		data.ShuffleDeck(deck)
+	}
+}
+
+func (app *application) prepForCreateResponse(deck *data.Deck) {
+	deck.Remaining = len(deck.Cards)
+	deck.Cards = []data.Card{}
+}
+
+func (app *application) prepForShowResponse(deck *data.Deck) {
+	deck.Cards = data.GenerateCards(deck.StringCards)
+	deck.Remaining = len(deck.Cards)
+}
+
+func (app *application) validateCount(v *validator.Validator, count int) {
+	v.Check(count > 0, "count", "must be more than zero")
+	v.Check(count <= 52, "count", "must be equal or less than 52")
+}
+
+func (app *application) validateForDraw(v *validator.Validator, count int, deck *data.Deck) {
+	cardsCount := len(deck.StringCards)
+
+	v.Check(cardsCount > 0, "deck", "has already been dealt")
+	v.Check(count <= cardsCount, "deck", "has less cards than requested")
+}
+
 func openDB(cfg config) (*sql.DB, error) {
 	db, err := sql.Open("postgres", cfg.db.dsn)
 	if err != nil {
@@ -132,24 +155,4 @@ func openDB(cfg config) (*sql.DB, error) {
 	}
 
 	return db, nil
-}
-
-func prepForInsert(deck *data.Deck) {
-	if len(deck.Cards) == 0 || deck.Cards == nil {
-		deck.Cards = data.GenerateAllCards()
-	}
-
-	if deck.Shuffled {
-		data.ShuffleDeck(deck)
-	}
-}
-
-func prepForCreateResponse(deck *data.Deck) {
-	deck.Remaining = len(deck.Cards)
-	deck.Cards = []data.Card{}
-}
-
-func prepForShowResponse(deck *data.Deck) {
-	deck.Cards = data.GenerateCards(deck.StringCards)
-	deck.Remaining = len(deck.Cards)
 }

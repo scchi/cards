@@ -20,7 +20,7 @@ type Deck struct {
 	Version     int       `json:"-"`
 }
 
-func ValidateDeck(v *validator.Validator, deck *Deck) {
+func ValidateCardsInput(v *validator.Validator, deck *Deck) {
 	v.Check(validator.Unique(deck.Cards), "cards", "must not contain duplicated values")
 	v.Check(len(deck.Cards) <= 52, "cards", "must not contain more than 52 cards")
 
