@@ -15,7 +15,6 @@ func (app *application) routes() *httprouter.Router {
 	router.GET("/v1/healthcheck", app.healthcheckHandler)
 	router.POST("/v1/decks", app.createDeckHandler)
 	router.GET("/v1/decks/:id", app.showDeckHandler)
-	router.PUT("/v1/decks/:id", app.drawCardsHandler) // TODO: count as payload
-
+	router.PUT("/v1/decks/:id", app.drawCardsHandler)
 	return router
 }

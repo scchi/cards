@@ -3,7 +3,7 @@ package data
 import (
 	"database/sql"
 	"errors"
-	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/lib/pq"
@@ -20,27 +20,6 @@ type Deck struct {
 	Version     int       `json:"-"`
 }
 
-func GenerateCards() []Card {
-	var result []Card
-
-	values := []string{
-		"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K",
-	}
-	suits := []string{
-		"S", "D", "C", "H",
-	}
-
-	for _, suit := range suits {
-		for _, value := range values {
-			code := fmt.Sprintf("%s%s", value, suit)
-			card := Card(code)
-			result = append(result, card)
-		}
-	}
-
-	return result
-}
-
 func ValidateDeck(v *validator.Validator, deck *Deck) {
 	v.Check(validator.Unique(deck.Cards), "cards", "must not contain duplicated values")
 	v.Check(len(deck.Cards) <= 52, "cards", "must not contain more than 52 cards")
@@ -51,6 +30,14 @@ func ValidateDeck(v *validator.Validator, deck *Deck) {
 
 type DeckModel struct {
 	DB *sql.DB
+}
+
+func ShuffleDeck(deck *Deck) {
+	rand.Seed(time.Now().Unix())
+
+	rand.Shuffle(len(deck.Cards), func(i, j int) {
+		deck.Cards[i], deck.Cards[j] = deck.Cards[j], deck.Cards[i]
+	})
 }
 
 func (d DeckModel) Insert(deck *Deck) error {

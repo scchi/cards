@@ -2,6 +2,7 @@ package data
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 )
 
@@ -34,6 +35,27 @@ func (c Card) MarshalJSON() ([]byte, error) {
 	js, _ := json.Marshal(jsonValue)
 
 	return js, nil
+}
+
+func GenerateCards() []Card {
+	var result []Card
+
+	values := []string{
+		"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K",
+	}
+	suits := []string{
+		"S", "D", "C", "H",
+	}
+
+	for _, suit := range suits {
+		for _, value := range values {
+			code := fmt.Sprintf("%s%s", value, suit)
+			card := Card(code)
+			result = append(result, card)
+		}
+	}
+
+	return result
 }
 
 func (c Card) GetSuit() string {

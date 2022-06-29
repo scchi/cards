@@ -3,9 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 	"net/http"
-	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/scchi/cards/internal/data"
@@ -38,19 +36,7 @@ func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request
 		}
 	}
 
-	if len(deck.Cards) == 0 || deck.Cards == nil {
-		deck.Cards = data.GenerateCards()
-	}
-
-	if deck.Shuffled {
-		rand.Seed(time.Now().Unix())
-
-		rand.Shuffle(len(deck.Cards), func(i, j int) {
-			deck.Cards[i], deck.Cards[j] = deck.Cards[j], deck.Cards[i]
-		})
-	}
-
-	deck.Remaining = len(deck.Cards)
+	prepDeckForInsert(deck)
 
 	err = app.models.Decks.Insert(deck)
 	if err != nil {
@@ -58,11 +44,11 @@ func (app *application) createDeckHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	prepDeckForResponse(deck)
+
 	headers := make(http.Header)
 	headers.Set("Location", fmt.Sprintf("/v1/decks/%s", deck.ID))
 
-	deck.Cards = []data.Card{}
-	// fmt.Printf("%+v\n", deck)
 	err = app.writeJSON(w, http.StatusCreated, deck, headers)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
