@@ -34,13 +34,13 @@ db/psql:
 ## db/migrations/up: apply all up database migrations
 db/migrations/up: confirm
 	@echo 'Running up migrations...'
-	migrate -path ./migrations -database ${CARDS_DB_DSN} up
+	migrate -path ./migrations/api -database ${CARDS_DB_DSN} up
 
 .PHONY: db/migrations/down
 ## db/migrations/down: apply all down database migrations
 db/migrations/down: confirm
 	@echo 'Running down migrations...'
-	migrate -path ./migrations -database ${CARDS_DB_DSN} down
+	migrate -path ./migrations/api -database ${CARDS_DB_DSN} down
 
 # ==================================================================================== #
 # AUDIT

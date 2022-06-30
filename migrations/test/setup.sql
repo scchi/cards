@@ -8,5 +8,3 @@ CREATE TABLE IF NOT EXISTS decks (
 );
 
 ALTER TABLE decks ADD CONSTRAINT cards_length_check CHECK (array_length(cards, 1) BETWEEN 0 AND 52);
-
-INSERT INTO decks (shuffled, cards) VALUES (TRUE, '{"AS", "5D", "KC", "2C", "AH"}');

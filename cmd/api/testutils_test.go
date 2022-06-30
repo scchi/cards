@@ -88,12 +88,12 @@ func put(t *testing.T, app *application, body map[string]int, url string) (*http
 }
 
 func newTestDB(t *testing.T) *sql.DB {
-	db, err := sql.Open("postgres", "postgres://test_deck:pa$$word@localhost/test_deck")
+	db, err := sql.Open("postgres", "postgres://test:passwOrd@localhost/test")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	script, err := os.ReadFile("../../internal/data/testdata/setup.sql")
+	script, err := os.ReadFile("../../migrations/test/setup.sql")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +104,7 @@ func newTestDB(t *testing.T) *sql.DB {
 	}
 
 	t.Cleanup(func() {
-		script, err := os.ReadFile("../../internal/data/testdata/teardown.sql")
+		script, err := os.ReadFile("../../migrations/test/teardown.sql")
 		if err != nil {
 			t.Fatal(err)
 		}
